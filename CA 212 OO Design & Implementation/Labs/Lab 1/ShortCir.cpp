@@ -3,6 +3,12 @@ This program can print three different things.
 What can be printed and what input causes these things to be printed?
 */
 #include <iostream>
+#include <windows.h> 
+
+inline void Wait(int seconds)
+{
+    Sleep(seconds * 1000);
+}
 
 bool test1(int age)
 {
@@ -29,4 +35,5 @@ int main()
 		std::cout << "You are a teenager\n";
 	else
 		std::cout << "You not are a teenager\n";
+	Wait(50);
 }
