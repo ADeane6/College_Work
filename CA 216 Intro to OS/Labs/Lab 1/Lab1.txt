@@ -1,0 +1,67 @@
+Overview
+
+In this lab we will:
+Compile and run a simple C program which makes a system call
+Add the code to make a system call of our own
+Trace the system calls made by our program
+Examine the fork system call
+Look at how threads are created and terminated in C
+A. System calls
+
+Take a copy of the C source code in getpid.c. Open the file in your favourite editor (e.g. gedit) and have a read of it. Try to understand what it does. (If you have not seen any C code before, do not be put off by the format, we will not be covering material significantly more advanced than what you have already covered in Java.) From the code we see that getpid is called, what does getpid do? It returns the process ID (a number) of the process that calls getpid. For a more detailed explanation enter the following at the prompt in a terminal window:
+
+$ man getpid
+
+From the C source code we build an executable called getpid using gcc (the GNU C Compiler) as follows:
+
+$ gcc -o getpid getpid.c
+
+Running the program a couple of times you should see output something like the following:
+
+$ ./getpid
+pid: 3129
+$ ./getpid
+pid: 3130
+$ ./getpid
+pid: 3131
+
+To which process does this number refer? Why does the number keep changing?
+
+As you did for getpid, look up getppid in the online manual pages. The getppid system call returns the process ID of the calling process's parent process. Add a call to getppid to your program. Make sure to print out the value returned by the call to getppid. Recompile the modified program and run it again. You should see something like this:
+
+$ ./getpid
+pid: 5561
+ppid: 3735
+$ ./getpid
+pid: 5562
+ppid: 3735
+
+The value of ppid does not change from one run to the next. Why not? Can you work out which process ppid refers to? (Hint: enter the ps command (it lists processes) in the terminal window and see if you can spot the parent process ID.)
+
+What are the system call numbers for getpid and getppid? To answer this question open this list in your browser. It lists the Linux system calls. Search for getpid and getppid.
+
+Linux provides the strace utility for tracing all of the system calls made by a program. You can use it to see system calls as they happen or to print out a summary once program execution has terminated. To get a summary of the system calls made by your program do this:
+
+$ strace -c ./getpid
+
+Amongst others you should see the calls to getpid and getppid.
+
+B. Fork
+
+Take a copy of fork.c. Compile and run it as shown above. It uses the fork system call to create a copy of the currently executing process - where we had a single running process now we have two processes executing the same program. The copy is a child of the process which called fork. The value returned by fork in the parent is the process ID of the child while the value returned in the child is zero. Check out the man page for fork if in doubt.
+
+Taking advantage of this information use an if ... else statement to have the parent print out "I am the parent" and the child print out "I am the child" before they exit.
+
+C. Shell
+
+Take a copy of mysh.c. Study the code and try to figure out what it does. Compile and run it as shown above. While running the program repeatedly prompts the user to enter Linux commands. What system call does the program use to execute commands entered by the user? What would happen if the program did not call fork? (Check by removing the call to fork and the references to pid.) What system call does the program use to pause execution until the command entered by the user had completed?
+
+D. Threads
+
+Lastly we take a brief look at threads. You are not expected to understand the details of the code presented here. The threads programming we do will be in Java, this example is merely to illustrate what threads can do.
+
+We will use the pthread library to create our threads. Take a copy of threads.c which launches two threads by calling pthread_create. It then waits for them to terminate by calling pthread_join. Compile the program as follows:
+
+$ gcc -o threads threads.c -lpthread
+
+Run the program and you should see the output produced by each thread intermingled on the screen. Which thread wins the race? Is it always the same thread that wins? What does that tell you about thread scheduling? Add a third thread of your own and the corresponding call to pthread_join.

@@ -1,0 +1,24 @@
+0. Compile and run a C++ program.
+	e.g. Hello World.
+
+1. Demonstrate short circuit feature in C++ with the logical and (&&) operator.
+
+Does it work the same way in Java?
+
+2. The expression 0 < x < 10 is a valid C++ expression but it may not evaluate as you would expect.
+Put it into a C++ program and see what it does. Try it with various values of x.
+
+Explain the values that you get.
+
+Will Java compile this? Explain your answer.
+
+3. Write a C++ program with an int as the condition of an if statement. Does it compile? Does it run as you would expect? Does the compiler generate a warning?
+
+3. Write code to test the comma operator. Does it produce what you would expect?
+
+4. Write code to print the value of an assignment statement:
+	e.g. x = 12
+
+5. Write a program to print a table of square roots using the sqrt statment.
+
+6. Write a deliberately broken recursive program which will generate a stack overflow.

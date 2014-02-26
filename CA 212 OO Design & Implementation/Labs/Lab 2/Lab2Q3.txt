@@ -1,0 +1,75 @@
+Arrays, Array bounds and Memory
+===============================
+
+C++ programs do not do array bounds checking. This can result in some serious errors which we will examine here. We will use a program called 5.cpp which writes outside the bounds of its array. We will use the gnu debugger to examine memory.
+
+1. First compile 5.cpp with the debugging option (-g).
+	g++ -g -o 5 5.cpp
+
+2. Now start gdb
+	gdb 5
+
+3. Set a breakpoint after variable declarations
+	(line 18 ... look at 5.cpp)
+
+	(gdb) 18
+
+Now run
+	(gdb) run
+
+4. Now examine memory at y. (Use address of y ... use the ampersand symbol '&')
+
+	(gdb) &y
+	0x7fffffffda6c:	0x0000002d
+
+This shows that y is at memory location 0x7fffffffda7c and has a value of 0x2d (45 in hex ... 2*16=32 and d is 13 => 0x2d = 45)
+Note that the address is likely different on your computer.
+
+Let's look at the numbers array
+
+	(gdb) x &numbers
+	0x7fffffffda70:	0x00400b90
+
+Seems to contain garbage. Well, the values from a[] haven't been copied in yet because we haven't executed that part of the code. Lets do that. Line 21 is after the for loop that copies the code, so set a breakpoint there.
+	(gdb) b 21
+
+then continue
+
+	(gdb) cont
+
+Now look at the array
+	(gdb) x &numbers
+	0x7fffffffda70:	0x0000000a
+
+0xa is 10.
+
+Show 4 values
+	(gdb) x/4 &numbers
+
+Show four decimal values
+	(gdb) x/4 &numbers
+
+Note that the address of y is 4 above numbers.
+
+Also, note that the address of x is 4 above that:
+	(gdb) x &x
+	0x7fffffffda68:	25
+
+Note that 0x68 + 4 = 0x6c and that 0x6c + 4 = 0x70
+
+Now I want to run to the end and see why this is important:
+
+	(gdb) b 28
+	Breakpoint 3 at 0x400a76: file 5.cpp, line 28.
+	(gdb) c
+	Continuing.
+	x = 25
+
+	Breakpoint 3, main () at 5.cpp:28
+	28		cout << endl;
+	(gdb) x/6d &x
+	0x7fffffffda68:	-3	-2	10	20
+	0x7fffffffda78:	30	40
+	(gdb) 
+
+Note that by modifying values outside the array bounds, I have actually modified the values of x and y! If you accidently write outside the bounds of an array in C++, you could accidently just change other variables.

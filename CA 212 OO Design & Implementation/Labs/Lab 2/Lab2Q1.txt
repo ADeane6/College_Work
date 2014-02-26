@@ -1,0 +1,38 @@
+1. Call by Reference
+====================
+
+Consider the following code:
+
+	int x = 3;
+	test(x);
+	cout << "x = " << x << endl;
+
+Put this into a program, and add a function test() that takes a parameter by call by reference and modify it so that x is modified and something other than 3 is printed for x.
+
+Changing only the function header, so that the function uses call by value, demonstrate that x maintains its original value.
+
+2. Method Overloading
+=====================
+
+Given the following functions:
+
+void f(int n, double m)
+{
+	cout << "f(int, double)" << endl;
+}
+void f(double n, int m)
+{
+	cout << "f(double, int)" << endl;
+}
+
+find which functions are invoked by the follwoing calls:
+
+	f(1, 1);
+	f(1, 1.0);
+	f(1.0, 1);
+	f(1.0, 1.0);
+
+Comment on the results.
+
+Assuming that does not compile, remove any ambiguous calls to f() so that it does compile and note the results.
+

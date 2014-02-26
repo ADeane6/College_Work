@@ -1,0 +1,22 @@
+Function Signatures
+===================
+
+Here is an interesting problem that can occur with C programs but not with C++ programs.
+
+Download the files minmain.c and min.c
+
+min.c just contains a function called min. It prints out its arguments and returns the smallest
+argument. It can be compiled to min.o. Use the line
+	gcc -c min.c
+
+minmain.c calls min(), but it assumes that it has only one parameter! (This is a serious error.)
+
+It can still be compiled and executed and there is no warning because the prototype in minmain.c matches the function call in minmain, but not the actual function in min.c
+
+So, compile minmain.c
+	gcc -o minmain minmain.c min.o
+
+Now run minmain:
+	./minmain
+
+Explain the results.
