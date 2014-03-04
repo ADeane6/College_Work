@@ -1,0 +1,37 @@
+1. Structures and Data hiding
+	Download hidingVars.cpp, run it and explain what is happening
+
+2. StructParameter.
+	Explain the output of 2.structparameters.cpp
+	Explain diff in output between 2.structparameters.cpp and 3.structparameters.cpp
+
+3. Convert all structs to classes.
+	Are there other changes you need to make?
+	What is the effect?
+
+4. Look up stack frames in C++
+	Use this to explain why memory works the way it does.
+
+5. Constructors
+
+6. What will CDDate2 print and why?
+	What is a default constructor?
+
+	Why is it 
+		CDDate day;
+	and not
+		CDDate day();
+	to call default constructor?
+
+7. How would you make it so you can't call the default constructor.
+
+8. No constructor
+	CDDate3.cpp
+
+	What would happen if day and month were private?
+
+9. Look at CDDate4.cpp
+	When the default constructor is commented out, then the program doesn't compile.
+	Why is that?
+
+10. Write code that demonstrates understanding of static variables.
