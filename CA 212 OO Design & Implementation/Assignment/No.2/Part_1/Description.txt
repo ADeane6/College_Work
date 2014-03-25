@@ -1,0 +1,50 @@
+Description
+
+Functions
+
+1.void removeWord(int a, int b = -1);
+  //removes all words from vector Words with the guess not in position a, if b == 0 remove all words with guess
+
+2.bool bestPos();
+  //leaves only the best family of words (most with guess in same position)
+
+3.void userLength();
+  //function to take user input for the length of word
+
+4.void guessAmount();
+  //get the user to input the amount of guesses allowed
+
+5.void debug();
+  //Enable debug mode if pa$$w0rd is right
+
+6.bool getGuess();
+  //function to get the guess from the user
+
+7.bool update();
+  //function to print the update after guessing and returns amount of guesses left
+
+8.void wordList(int x);
+  //function to create a vector of all words with length x
+
+9.void pickWord();
+  //function to pick a random word from vector Words --- only needed for normal hangman
+
+10.bool contains(vector<char> word);
+  //return true if guess is in vector word
+
+
+classes
+
+1. a hangman class to 
+handle hangman game variables and functions
+i.e class hangman
+
+
+Sneaky algorithm
+
+-the sneaky algorithn uses two metohds, the first being bestPos() which finds the best position of the char guess (i.e the position where the most words are kept)
+this inturn calls removeWord() which removes the words with char guess in the wrong position or removes the words with char guess in it
+
+-this occurs everytime there is a guess.
+
+
