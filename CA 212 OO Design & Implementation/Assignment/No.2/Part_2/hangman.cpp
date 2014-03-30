@@ -7,47 +7,101 @@
 #include <time.h> 
 using namespace std;
 
+void hangman::removeIncWord()
+{
+  for(long i = 0; i < Words.size(); i++)
+  {
+    for(int k = 0; k < wordLength; k++)
+    {
+      if(Words[i][k] == guess)
+      {
+        Words.erase(Words.begin()+i);
+        i--;
+        break;
+      }
+    }
+  }
+}
 
+void hangman::removeExWord(int a)
+{
+  bool deleteIt;
+  for(long i = 0; i < Words.size(); i++)
+  {
+    for(int k = 0; k < wordLength; k++)
+    {
+      if(Words[i][k] == guess && k != a)
+      {
+        Words.erase(Words.begin()+i);
+        i--;
+        break;
+      }
+    }
+  }
+  for(long i = 0; i < Words.size(); i++)
+  {
+    deleteIt = true;
+    if(Words[i][a] == guess)
+    {
+      deleteIt = false;
+    }
+    if(deleteIt)
+    {
+      Words.erase(Words.begin()+i);
+      i--;
+    }  
+  }
+}
+/*
 void hangman::removeWord(int a, int b)
 {
-  vector <string> temp;
+  bool temp;
 
 	for(int i = 0; i < Words.size(); i++)
 	{
+    temp = true;
 		for(int k = 0; k < wordLength; k++)
 		{
+
 			if(b == 0 && Words[i][k] == guess)
       {
         Words.erase(Words.begin()+i);
+        break;
       }
       else if(Words[i][k] == guess && k == a)
 			{
-				temp.push_back(Words[i]);
+				temp = false;
 				break;
 			}
 		}
+
+    if (temp && b != 0)
+    {
+      Words.erase(Words.begin()+i);
+    }
+
 	}
-  if(b == 0)
-  {
-    Words.resize(temp.size());
-    Words.assign(temp.begin(),temp.end());
-  }
 }
+*/
 //removes all words from vector Words with the char x in it if there are more then 5 words without x
 
 bool hangman::bestPos()
 {
+
+  if(Words.size() <= 5)
+    return false;
 	charLoc.assign (wordLength + 1, 0);
-	int family = -1;
+	int family = 0;
+  familyNo = 0;
   bool contains = false;
 	for(int i = 0; i < Words.size(); i++)
 	{
-		for(int k = 1; k < wordLength + 1; i++)
+		for(int k = 0; k < wordLength; k++)
 		{
 
-			if(Words[i][k-1] == guess)
+			if(Words[i][k] == guess)
 			{
-				charLoc[k]++;
+				charLoc[k+1]++;
         contains = true;
 			}
 		}
@@ -55,23 +109,31 @@ bool hangman::bestPos()
     {
       charLoc[0]++;
     }
+    contains = false;
 	}
 
 	for(int i = 0; i < charLoc.size(); i++)
 	{
-		if(charLoc[i] >= family)
-			family = charLoc[i];
+    if(debugMode)
+      cout << "Pos: " << i << ": " << charLoc[i] << endl;
+		if(charLoc[i] > family)
+    {
+			familyNo = i;
+      family = charLoc[i];
+    }
 	}
+  if(debugMode)
+    cout << "Best Position: " << familyNo << endl;
 
-  if(family == 0)
+  if(familyNo == 0)
   {
-    removeWord(10000, family);
+    removeIncWord();
   }
   else
   {
-    removeWord(family-1);
+    removeExWord(familyNo-1);
   }
-
+  word = Words[0];
 	return true;
 
 }

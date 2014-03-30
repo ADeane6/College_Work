@@ -14,8 +14,10 @@ public:
   vector<int> charLoc;  //locations of chars in vector Words
   bool debugMode;       //Debug mode
   vector<char> wordP;     //vector to store progress
+  int familyNo;
 
-  void removeWord(int a, int b = -1);
+  void removeIncWord();
+  void removeExWord(int a);
   //removes all words from vector Words with the guess in it
 
   bool bestPos();
