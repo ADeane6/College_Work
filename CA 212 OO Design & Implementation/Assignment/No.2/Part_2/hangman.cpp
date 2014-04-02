@@ -23,6 +23,57 @@ void hangman::removeIncWord()
   }
 }
 
+bool hangman::attemptRemoveExWord(int a)
+{
+  vector<string> Temp;
+  bool keep;
+ for(long i = 0; i < Words.size(); i++)
+  {
+    keep = true;
+    if(Words[i][a] == guess)
+    {
+      keep = false;
+    }
+    if(keep)
+    {
+      Temp.push_back(Words[i]);
+    }
+  }
+  if(Temp.size()>0)
+  {
+    Words.assign(Temp.begin(), Temp.end());
+    return true;
+  }
+  return false;
+}
+
+bool hangman::attemptRemoveIncWord()
+{
+  vector<string> Temp;
+  bool wordInd;
+  for(long i = 0; i < Words.size(); i++)
+  {
+    wordInd = true;
+    for(int k = 0; k < wordLength; k++)
+    {
+      if(Words[i][k] == guess)
+      {
+        wordInd = false;
+      }
+    }
+    if(wordInd)
+    {
+      Temp.push_back(Words[i]);
+    }
+  }
+  if(Temp.size()>0)
+  {
+    Words.assign(Temp.begin(), Temp.end());
+    return true;
+  }
+  return false;
+}
+
 void hangman::removeExWord(int a)
 {
   bool deleteIt;
@@ -52,44 +103,9 @@ void hangman::removeExWord(int a)
     }  
   }
 }
-/*
-void hangman::removeWord(int a, int b)
-{
-  bool temp;
-
-	for(int i = 0; i < Words.size(); i++)
-	{
-    temp = true;
-		for(int k = 0; k < wordLength; k++)
-		{
-
-			if(b == 0 && Words[i][k] == guess)
-      {
-        Words.erase(Words.begin()+i);
-        break;
-      }
-      else if(Words[i][k] == guess && k == a)
-			{
-				temp = false;
-				break;
-			}
-		}
-
-    if (temp && b != 0)
-    {
-      Words.erase(Words.begin()+i);
-    }
-
-	}
-}
-*/
-//removes all words from vector Words with the char x in it if there are more then 5 words without x
 
 bool hangman::bestPos()
 {
-
-  if(Words.size() <= 5)
-    return false;
 	charLoc.assign (wordLength + 1, 0);
 	int family = 0;
   familyNo = 0;
@@ -125,14 +141,18 @@ bool hangman::bestPos()
   if(debugMode)
     cout << "Best Position: " << familyNo << endl;
 
-  if(familyNo == 0)
+  if(Words.size() <= 5)
   {
+    if(familyNo == 0)
+      return attemptRemoveIncWord();
+    else
+      return attemptRemoveExWord(familyNo-1);
+  }
+  else if(familyNo == 0)
     removeIncWord();
-  }
   else
-  {
     removeExWord(familyNo-1);
-  }
+
   word = Words[0];
 	return true;
 
@@ -142,9 +162,12 @@ bool hangman::bestPos()
 
 void hangman::userLength()
 {
-  cout << "Welcome to a friendly game of hangman" << endl;
-  cout << "Please enter a length for the word (4-8): ";
-  cin  >> wordLength;
+  while(wordLength>10 || wordLength<4)
+  {
+    cout << "Welcome to a friendly game of hangman" << endl;
+    cout << "Please enter a length for the word (4<->10): ";
+    cin  >> wordLength;
+  }
   wordP.assign(wordLength, '_');
 
 }

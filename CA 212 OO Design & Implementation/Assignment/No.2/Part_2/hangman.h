@@ -16,6 +16,9 @@ public:
   vector<char> wordP;     //vector to store progress
   int familyNo;
 
+
+  bool attemptRemoveIncWord();
+  bool attemptRemoveExWord(int a);
   void removeIncWord();
   void removeExWord(int a);
   //removes all words from vector Words with the guess in it

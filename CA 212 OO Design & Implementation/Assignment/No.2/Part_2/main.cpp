@@ -84,6 +84,7 @@ int main()
 			//for version one this is always false
 			if(game.bestPos())
 			{
+				game.word = game.Words[0];
 				wordC.assign (game.word.begin(), game.word.end());
 
 				//print word
