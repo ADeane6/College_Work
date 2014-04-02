@@ -7,139 +7,46 @@
 #include <time.h> 
 using namespace std;
 
-void hangman::removeIncWord()
+bool hangman::findBestPos()
 {
-  for(long i = 0; i < Words.size(); i++)
-  {
-    for(int k = 0; k < wordLength; k++)
-    {
-      if(Words[i][k] == guess)
-      {
-        Words.erase(Words.begin()+i);
-        i--;
-        break;
-      }
-    }
-  }
-}
-
-bool hangman::attemptRemoveExWord(int a)
-{
-  vector<string> Temp;
-  bool keep;
- for(long i = 0; i < Words.size(); i++)
-  {
-    keep = true;
-    if(Words[i][a] == guess)
-    {
-      keep = false;
-    }
-    if(keep)
-    {
-      Temp.push_back(Words[i]);
-    }
-  }
-  if(Temp.size()>0)
-  {
-    Words.assign(Temp.begin(), Temp.end());
-    return true;
-  }
-  return false;
-}
-
-bool hangman::attemptRemoveIncWord()
-{
-  vector<string> Temp;
-  bool wordInd;
-  for(long i = 0; i < Words.size(); i++)
-  {
-    wordInd = true;
-    for(int k = 0; k < wordLength; k++)
-    {
-      if(Words[i][k] == guess)
-      {
-        wordInd = false;
-      }
-    }
-    if(wordInd)
-    {
-      Temp.push_back(Words[i]);
-    }
-  }
-  if(Temp.size()>0)
-  {
-    Words.assign(Temp.begin(), Temp.end());
-    return true;
-  }
-  return false;
-}
-
-void hangman::removeExWord(int a)
-{
-  bool deleteIt;
-  for(long i = 0; i < Words.size(); i++)
-  {
-    for(int k = 0; k < wordLength; k++)
-    {
-      if(Words[i][k] == guess && k != a)
-      {
-        Words.erase(Words.begin()+i);
-        i--;
-        break;
-      }
-    }
-  }
-  for(long i = 0; i < Words.size(); i++)
-  {
-    deleteIt = true;
-    if(Words[i][a] == guess)
-    {
-      deleteIt = false;
-    }
-    if(deleteIt)
-    {
-      Words.erase(Words.begin()+i);
-      i--;
-    }  
-  }
-}
-
-bool hangman::bestPos()
-{
-	charLoc.assign (wordLength + 1, 0);
-	int family = 0;
-  familyNo = 0;
+  charLoc.assign (wordLength + 1, 0);
+  int family = 0;
+  int familyNo = 0;
   bool contains = false;
-	for(int i = 0; i < Words.size(); i++)
-	{
-		for(int k = 0; k < wordLength; k++)
-		{
+  for(int i = 0; i < Words.size(); i++)
+  {
+    for(int k = 0; k < wordLength; k++)
+    {
 
-			if(Words[i][k] == guess)
-			{
-				charLoc[k+1]++;
+      if(Words[i][k] == guess)
+      {
+        charLoc[k+1]++;
         contains = true;
-			}
-		}
+      }
+    }
     if(!contains)
     {
       charLoc[0]++;
     }
     contains = false;
-	}
+  }
 
-	for(int i = 0; i < charLoc.size(); i++)
-	{
+  for(int i = 0; i < charLoc.size(); i++)
+  {
     if(debugMode)
       cout << "Pos: " << i << ": " << charLoc[i] << endl;
-		if(charLoc[i] > family)
+    if(charLoc[i] > family)
     {
-			familyNo = i;
+      familyNo = i;
       family = charLoc[i];
     }
-	}
+  }
   if(debugMode)
+  {
     cout << "Best Position: " << familyNo << endl;
+    if(Words.size() <= 10)
+      remaining();
+  }
 
   if(Words.size() <= 5)
   {
@@ -153,14 +60,89 @@ bool hangman::bestPos()
   else
     removeExWord(familyNo-1);
 
-  word = Words[0];
-	return true;
+  
+  return true;
 
 }
-//leaves only the best family of words (most with letter X in same position)
+
+void hangman::removeGen(vector<string> &Temp, int a)
+{
+  for(long i = 0; i < Temp.size(); i++)
+  {
+    for(int k = 0; k < wordLength; k++)
+    {
+      if(Temp[i][k] == guess && k != a)
+      {
+        Temp.erase(Temp.begin()+i);
+        i--;
+        break;
+      }
+    }
+  }
+}
+
+void hangman::removeKeep(vector<string> &Temp, int a)
+{
+  bool deleteIt;
+
+  for(long i = 0; i < Temp.size(); i++)
+  {
+    deleteIt = true;
+    if(Temp[i][a] == guess)
+    {
+      deleteIt = false;
+    }
+    if(deleteIt)
+    {
+      Temp.erase(Temp.begin()+i);
+      i--;
+    }  
+  }
+}
+
+void hangman::removeIncWord()
+{
+  removeGen(Words, -1);
+}
+
+bool hangman::attemptRemoveIncWord()
+{
+  vector<string> Temp = Words;
+  removeGen(Temp, -1);
+
+  if(Temp.size()>0)
+  {
+    Words.assign(Temp.begin(), Temp.end());
+    return true;
+  }
+  return false;
+}
+
+void hangman::removeExWord(int a)
+{
+  removeGen(Words, a);
+  removeKeep(Words, a);
+}
+
+bool hangman::attemptRemoveExWord(int a)
+{
+  vector<string> Temp = Words;
+  bool deleteIt;
+  
+  removeGen(Temp, a);
+  removeKeep(Temp, a);
+
+  if(Temp.size()>0)
+  {
+    Words.assign(Temp.begin(), Temp.end());
+    return true;
+  }
+  return false;
+}
 
 
-void hangman::userLength()
+
+void hangman::userSetup()
 {
   while(wordLength>10 || wordLength<4)
   {
@@ -170,19 +152,10 @@ void hangman::userLength()
   }
   wordP.assign(wordLength, '_');
 
-}
-//function to take user input for the length of word
-
-void hangman::guessAmount()
-{
   cout << endl << "How many guesses would you like: ";
   cin >> remGuesses;
   cout << endl;
-}
-//get the user to input the amount of guesses allowed
 
-void hangman::debug()
-{
   string password;
   cout << "Input password for debug mode: ";
   cin >> password;
@@ -190,7 +163,6 @@ void hangman::debug()
     debugMode = true;
   else debugMode = false;
 }
-//enable debug mode if password is correct
 
 bool hangman::getGuess()
 {
@@ -199,13 +171,13 @@ bool hangman::getGuess()
   if (!contains(guesses))
   {
     guesses.push_back(guess);
-    return false;
+    return true;
   }
-  return true;
+  return false;
 }
 //function to get the guess from the user
 
-bool hangman::update()
+bool hangman::outputUpdate()
 {
   cout << "Guessed letters: ";
   for (int i = 0; i < guesses.size(); i++)
@@ -216,14 +188,14 @@ bool hangman::update()
   cout << "Guesses remaining: " << remGuesses << endl << "|" << endl;
   if (remGuesses == 0)
   {
-    cout << "Hard luck, Game Over" << endl;
+    cout << "Hard luck, Game Over" << endl << endl;
     return false;
   }
   return true;
 }
 //function to print the update after guessing and returns amount of guesses left
 
-void hangman::wordList(int x)
+void hangman::fillWordList()
 {
   ifstream dictionary ("dictionary.txt");
   string word;
@@ -231,7 +203,7 @@ void hangman::wordList(int x)
   {
     while (getline(dictionary,word))
     {
-      if(word.length() == x)
+      if(word.length() == wordLength)
         Words.push_back(word);
     }
     dictionary.close();
@@ -243,12 +215,12 @@ void hangman::remaining()
 {
   for(int i = 0; i < Words.size(); i++)
   {
-    cout << i << ": " << Words[i];
+    cout << i << ": " << Words[i] << endl;
   }
 }
 //A debug function to print the vector of words
 
-void hangman::pickWord()
+void hangman::pickRandWord()
 {
   srand(time(NULL));
   word = Words[rand() % Words.size()+1];

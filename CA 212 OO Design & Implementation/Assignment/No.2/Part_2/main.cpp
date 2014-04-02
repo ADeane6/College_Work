@@ -25,19 +25,21 @@ void printVec(vector<char> word)
 	}
 	cout << endl << "|" << endl;
 }
-//prints the vector argument with spaces in between
 
 
-void printMan(int i)
+void printStickMan(string i)
 {
-	if (i == 0)
+	if (i.compare("Lost") == 0)
 	{
+		cout << "Unfortunately you Lost" << endl;
 		cout << "______" << endl << "|   |" << endl << "|   O" << endl << "|  /|\\" << endl << "|  / \\" << endl << "|" << endl << "~~~~~~~~" << endl;
 	}
 	else
+	{
+		cout << "Well done you Won" << endl;
 		cout << endl << "  O" << endl << " /|\\" << endl << " / \\" << endl << "~~~~~~~" << endl;
+	}
 }
-//prints the stick man at the end
 
 
 int main()
@@ -47,42 +49,32 @@ int main()
 	char cguess;
 	int complete = 0;
 
-	//get user input
-	game.userLength();
-	game.guessAmount();
+	game.userSetup();
 
-	//fill list
-	game.wordList(game.wordLength);
-	cout<<game.Words.max_size()<<endl;
-	//get a random word
-	game.pickWord();
+	game.fillWordList();
+	
+	game.pickRandWord();
 	vector<char> wordC (game.word.begin(), game.word.end());
 
-	//checking for dev password
-	game.debug();
 	if(game.debugMode)
 		cout << game.word << endl;
-
 
 
 //-----------------Main Game-----------------//
 	//while loop to play normal hangman
 	while (complete < game.wordLength)
 	{
-		//get user guess
-		//check if they already guessed that char
-		if(game.getGuess())
+		if(!game.getGuess())
 		{
 			cout << "please use new letter!!!" << endl;
 			game.remGuesses--;
 		}
 
-		//continue if guess is new
 		else
 		{
 			
 			//for version one this is always false
-			if(game.bestPos())
+			if(game.findBestPos())
 			{
 				game.word = game.Words[0];
 				wordC.assign (game.word.begin(), game.word.end());
@@ -104,8 +96,6 @@ int main()
 					}
 				}
 			}
-
-			//remove life if wrong
 			else
 			{
 				game.remGuesses--;
@@ -114,23 +104,17 @@ int main()
 		//print how far player has gotten got
 		printVec(game.wordP);
 
-		//if out of guesses
-		if(!game.update())
+		if(!game.outputUpdate())
 			break;
 	}
 
 
 
 //-----------------End Game-----------------//
-	//check if wplayer Won
 	if(game.remGuesses != 0)
-	{
-		cout << "Well done you Won" << endl;
-		printMan(1);
-	}
-	//if player lost
+		printStickMan("Won");
 	else
-		printMan(0);
+		printStickMan("Lost");
 
 	cout << "the word was: " << game.word << endl;
 }
