@@ -147,7 +147,7 @@ void hangman::userSetup()
   while(wordLength>10 || wordLength<4)
   {
     cout << "Welcome to a friendly game of hangman" << endl;
-    cout << "Please enter a length for the word (4<->10): ";
+    cout << "Please enter a length for the word (4-10): ";
     cin  >> wordLength;
   }
   wordP.assign(wordLength, '_');
