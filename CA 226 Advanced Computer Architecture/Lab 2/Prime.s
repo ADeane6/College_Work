@@ -18,7 +18,6 @@ main:
 
 	loop:
 	ddiv r2,r5
-	mfhi r6
 	beq r6,r4,done
 
 	daddi r5,r5,1
