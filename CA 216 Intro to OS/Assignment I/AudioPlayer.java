@@ -5,7 +5,7 @@ class BoundedBuffer
 {
 	int nextIn;
 	int nextOut;
-	int size;
+	final int size = 10;
     int occupied;
 	int ins;
 	int outs;
@@ -14,10 +14,14 @@ class BoundedBuffer
 	int duration;
 	AudioFormat format;
 	DataLine.Info info;
+	
+	
 	boolean dataAvailable; //for consumer
 	boolean roomAvailable; //for producer
-	BoundedBuffer()
+	BoundedBuffer(int chunk)
 	{
+		chunkSize = chunk;
+		buffer = new byte[chunkSize*10];
 		roomAvailable = true;
 		nextIn = 0;
 		nextOut = 0;
@@ -25,46 +29,15 @@ class BoundedBuffer
 		ins = 0;
 		outs = 0;
 	}
-	void getinfo()
-	{
-		try
-		{
-			AudioInputStream song = AudioSystem.getAudioInputStream(new File("song.wav"));
-			format=song.getFormat();
-			info = new DataLine.Info(SourceDataLine.class, format);
-			
-			System.out.println("Audio format: "+format.toString());
-			
-			chunkSize = (int)(format.getChannels()*format.getSampleRate() * format.getSampleSizeInBits()/8);
-			System.out.println("Chunk Size is: "+chunkSize);
-			buffer = new byte[chunkSize*10];
-			size=chunkSize*10;
-			long frames = song.getFrameLength();
-			duration = (int)(frames+0.0) / (int)(format.getFrameRate());
-			System.out.println("Song Duration is: "+duration);
-		} 
-		catch (UnsupportedAudioFileException e ) {
-			System.out.println("Player initialisation failed");
-			e.printStackTrace();
-			System.exit(1);
-		}
-		catch (IOException e) {
-			System.out.println("Player initialisation failed");
-			e.printStackTrace();
-			System.exit(1);
-		}
-		
-	
-	}
 
 	boolean over()
 	{
 		return !(outs <= duration);
 	}
 
-	void insertChunk(byte[] chunk)
+	synchronized void insertChunk(byte[] chunk)
 	{
-		while(!roomAvailable) 
+		while(occupied == size) 
 		{
 			try 
 			{
@@ -77,26 +50,32 @@ class BoundedBuffer
 			buffer[i] = chunk[k];
 		}
 		nextIn += chunkSize;
-		nextIn = nextIn%size;
+		nextIn = (nextIn+1)%size;
 		occupied++;
-		if(occupied == 0)
-		{
-			dataAvailable = false;
-		}
 		ins++;
+		notifyAll();
 	}
 	
-	byte[] removeChunk()
+	synchronized byte[] removeChunk()
 	{
+		while(occupied == 0) 
+		{
+			try 
+			{
+				wait();
+			} catch (InterruptedException e) 
+			{}
+		}
 		byte[] chunk = new byte[chunkSize];
 		for (int i = nextOut, k = 0; k < chunkSize; i++, k++)
 		{
 			chunk[k] = buffer[i];
 		}
 		nextOut += chunkSize;
-		nextOut = nextOut%size;
+		nextOut = (nextOut+1)%size;
 		occupied--;
 		outs++;
+		notifyAll();
 		return chunk;
 	}
 
@@ -105,21 +84,42 @@ class Producer extends Thread
 {
 	BoundedBuffer bBuffer;
 
-	Producer(BoundedBuffer buffer) {
-    bBuffer = buffer;
+	Producer(BoundedBuffer buffer) 
+	{
+    	bBuffer = buffer;
 	}
 
 	public synchronized void run()
 	{
 		try
-		{
-			byte[] currentChunk = new byte[bBuffer.chunkSize];
+		{	
 			AudioInputStream song = AudioSystem.getAudioInputStream(new File("song.wav"));
-			while(true)
+			bBuffer.format = song.getFormat();
+			bBuffer.info = new DataLine.Info(SourceDataLine.class, bBuffer.format);
+		
+			System.out.println("Audio format: "+bBuffer.format.toString());
+
+			System.out.println("Chunk Size is: "+bBuffer.chunkSize);
+
+			long frames = song.getFrameLength();
+			bBuffer.duration = (int)(frames+0.0) / (int)(bBuffer.format.getFrameRate());
+
+			System.out.println("Song Duration is: "+bBuffer.duration);
+
+
+			byte[] currentChunk = new byte[bBuffer.chunkSize];
+			SourceDataLine line = (SourceDataLine) AudioSystem.getLine(bBuffer.info);
+			line.open(bBuffer.format);
+			line.start();
+			while(line.available()!=0)
 			{
 				int temp = song.read(currentChunk);
 				bBuffer.insertChunk(currentChunk);
+				System.out.println(2);
 			}
+			line.drain();
+			line.stop();
+			line.close();
 		}
 		catch (IOException e) {
 			System.out.println("Player initialisation failed");
@@ -127,6 +127,12 @@ class Producer extends Thread
 			System.exit(1);
 		} 
 		catch (UnsupportedAudioFileException e ) {
+			System.out.println("Player initialisation failed");
+			e.printStackTrace();
+			System.exit(1);
+		}
+		catch (LineUnavailableException e) 
+		{
 			System.out.println("Player initialisation failed");
 			e.printStackTrace();
 			System.exit(1);
@@ -139,25 +145,32 @@ class Producer extends Thread
 
 class Consumer extends Thread
 {
-	BoundedBuffer bBuffer;
+	private BoundedBuffer bBuffer;
+	AudioFormat format;
+	DataLine.Info info;
 
-	Consumer(BoundedBuffer buffer) {
-    bBuffer = buffer;
+	Consumer(BoundedBuffer buffer) 
+	{
+   		bBuffer = buffer;
+   		format = bBuffer.format;
+   		info = bBuffer.info;
 	}
 
 	public synchronized void run()
 	{
 		try
 		{
-
-			SourceDataLine line = (SourceDataLine) AudioSystem.getLine(bBuffer.info);
-			line.open(bBuffer.format);
+			AudioInputStream song = AudioSystem.getAudioInputStream(new File("song.wav"));
+			AudioFormat format = song.getFormat();
+			DataLine.Info info = new DataLine.Info(SourceDataLine.class, format);
+			SourceDataLine line = (SourceDataLine) AudioSystem.getLine(info);
+			line.open(format);
 			line.start();
-			while(!bBuffer.over())
+			while(line.available()!=0)
 			{
 				byte[] audioChunk = bBuffer.removeChunk();
 				line.write(audioChunk, 0, bBuffer.chunkSize);
-				wait(1);
+				System.out.println(1);
 
 			}			
 			line.drain();
@@ -165,11 +178,16 @@ class Consumer extends Thread
 			line.close();
 			System.out.println("Bye Bye from DJ");
 			return;
-		}
-		catch (InterruptedException e)
-		{
-			System.out.println("Bye Bye from DJ");
-			return;
+		} 
+		catch (IOException e) {
+			System.out.println("Player initialisation failed");
+			e.printStackTrace();
+			System.exit(1);
+		} 
+		catch (UnsupportedAudioFileException e ) {
+			System.out.println("Player initialisation failed");
+			e.printStackTrace();
+			System.exit(1);
 		}
 		catch (LineUnavailableException e) 
 		{
@@ -186,15 +204,31 @@ class AudioPlayer
 {
 	public static void main(String[]args)
 	{
-		BoundedBuffer stream= new BoundedBuffer();
-		stream.getinfo();
+		try
+		{
+			AudioInputStream song = AudioSystem.getAudioInputStream(new File("song.wav"));
+			AudioFormat format = song.getFormat();
+			int chunkSize = (int)(format.getChannels()*format.getSampleRate() * format.getSampleSizeInBits()/8);
+			BoundedBuffer stream= new BoundedBuffer(chunkSize);
+			
+			Producer reader = new Producer(stream);
+			Consumer dj = new Consumer(stream);
+
+			reader.start();
+			dj.start();
+		}
+
+		catch (UnsupportedAudioFileException e ) {
+			System.out.println("Player initialisation failed");
+			e.printStackTrace();
+			System.exit(1);
+		}
+		catch (IOException e) {
+			System.out.println("Player initialisation failed");
+			e.printStackTrace();
+			System.exit(1);
+		}
 		
-
-		Producer reader = new Producer(stream);
-		Consumer dj = new Consumer(stream);
-
-		reader.start();
-		dj.start();
 
 
 
