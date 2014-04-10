@@ -5,7 +5,8 @@ class BoundedBuffer
 {
 	int nextIn;
 	int nextOut;
-	final int size = 10;
+	final int slots = 10;
+	int size;
     int occupied;
 	int ins;
 	int outs;
@@ -21,7 +22,8 @@ class BoundedBuffer
 	BoundedBuffer(int chunk)
 	{
 		chunkSize = chunk;
-		buffer = new byte[chunkSize*10];
+		size = chunkSize*slots;
+		buffer = new byte[size];
 		roomAvailable = true;
 		nextIn = 0;
 		nextOut = 0;
@@ -37,7 +39,7 @@ class BoundedBuffer
 
 	synchronized void insertChunk(byte[] chunk)
 	{
-		while(occupied == size) 
+		while(occupied == slots) 
 		{
 			try 
 			{
@@ -49,8 +51,7 @@ class BoundedBuffer
 		{
 			buffer[i] = chunk[k];
 		}
-		nextIn += chunkSize;
-		nextIn = (nextIn+1)%size;
+		nextIn = (nextIn+chunkSize)%size;
 		occupied++;
 		ins++;
 		notifyAll();
@@ -71,8 +72,7 @@ class BoundedBuffer
 		{
 			chunk[k] = buffer[i];
 		}
-		nextOut += chunkSize;
-		nextOut = (nextOut+1)%size;
+		nextOut = (nextOut+chunkSize)%size;
 		occupied--;
 		outs++;
 		notifyAll();
@@ -108,18 +108,17 @@ class Producer extends Thread
 
 
 			byte[] currentChunk = new byte[bBuffer.chunkSize];
-			SourceDataLine line = (SourceDataLine) AudioSystem.getLine(bBuffer.info);
+			/*SourceDataLine line = (SourceDataLine) AudioSystem.getLine(bBuffer.info);
 			line.open(bBuffer.format);
-			line.start();
-			while(line.available()!=0)
+			line.start();*/
+			while(bBuffer.ins <= bBuffer.duration)
 			{
-				int temp = song.read(currentChunk);
+				song.read(currentChunk);
 				bBuffer.insertChunk(currentChunk);
-				System.out.println(2);
 			}
-			line.drain();
+			/*line.drain();
 			line.stop();
-			line.close();
+			line.close();*/
 		}
 		catch (IOException e) {
 			System.out.println("Player initialisation failed");
@@ -130,13 +129,13 @@ class Producer extends Thread
 			System.out.println("Player initialisation failed");
 			e.printStackTrace();
 			System.exit(1);
-		}
+		}/*
 		catch (LineUnavailableException e) 
 		{
 			System.out.println("Player initialisation failed");
 			e.printStackTrace();
 			System.exit(1);
-		}
+		}*/
 	
 	
 	}
@@ -166,11 +165,10 @@ class Consumer extends Thread
 			SourceDataLine line = (SourceDataLine) AudioSystem.getLine(info);
 			line.open(format);
 			line.start();
-			while(line.available()!=0)
+			while(bBuffer.outs <= bBuffer.duration)
 			{
 				byte[] audioChunk = bBuffer.removeChunk();
 				line.write(audioChunk, 0, bBuffer.chunkSize);
-				System.out.println(1);
 
 			}			
 			line.drain();
