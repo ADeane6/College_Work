@@ -25,6 +25,7 @@ class BoundedBuffer
 		size = chunkSize*slots;
 		buffer = new byte[size];
 		roomAvailable = true;
+		dataAvailable = false;
 		nextIn = 0;
 		nextOut = 0;
 		occupied = 0;
@@ -39,7 +40,7 @@ class BoundedBuffer
 
 	synchronized void insertChunk(byte[] chunk)
 	{
-		while(occupied == slots) 
+		while(!roomAvailable) 
 		{
 			try 
 			{
@@ -54,12 +55,15 @@ class BoundedBuffer
 		nextIn = (nextIn+chunkSize)%size;
 		occupied++;
 		ins++;
+		dataAvailable = true;
+		if(occupied==slots)
+			roomAvailable = false;
 		notifyAll();
 	}
 	
 	synchronized byte[] removeChunk()
 	{
-		while(occupied == 0) 
+		while(!dataAvailable) 
 		{
 			try 
 			{
@@ -75,6 +79,9 @@ class BoundedBuffer
 		nextOut = (nextOut+chunkSize)%size;
 		occupied--;
 		outs++;
+		roomAvailable = true;
+		if(occupied==0)
+			dataAvailable = false;
 		notifyAll();
 		return chunk;
 	}
